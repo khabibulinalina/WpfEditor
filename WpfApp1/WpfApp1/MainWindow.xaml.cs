@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -24,6 +25,7 @@ namespace WpfApp1
         private Brush _currentBackColor;
         private double _currentThickness;
         private LineType _currentLineType;
+        //private List<Shape> _tempShapes = new List<Shape>();
 
         public MainWindow()
         {
@@ -34,7 +36,8 @@ namespace WpfApp1
                 "окружность",
                 "полилиния",
                 "многоугольник",
-                "эллипс"
+                "эллипс",
+                "курсор"
             };
             LineTypes = new ObservableCollection<string>
             {
@@ -46,7 +49,6 @@ namespace WpfApp1
             InitializeComponent();  //загружает интерфейс
             LineColorPicker.SelectedColor=Color.FromRgb(255,111,150);
             BackColorPicker.SelectedColor = Color.FromRgb(255, 255, 0);
-
             Canvas.MouseDown += CanvasOnMouseDown; //подписка на события нажатия и перемещения мыши
             Canvas.MouseMove += CanvasOnMouseMove;
         }
@@ -91,7 +93,7 @@ namespace WpfApp1
 
         private void CanvasOnMouseDown(object sender, MouseButtonEventArgs args)
         {
-           ;
+           
             if (args.ChangedButton == MouseButton.Right)//если была нажата правая кнопка мыши, то произойдет следующее:
             {
                 if (_currentFigure is Polygone polygone)// если текущая фигура - многоугольник, то завершить его рисовать(обнулить текущую фигуру)
@@ -132,6 +134,7 @@ namespace WpfApp1
 
                 if (_currentFigure is Polyline)//если текущая фигура - полилиния, то закончить ее рисовать и начать рисовать новую 
                 {
+                    //_tempShapes.Add(_currentFigure);
                     _currentFigure = new Polyline(_currentThickness, _currentLineColor, _currentBackColor, _currentLineType)
                     {
                         StartPoint = args.GetPosition(Canvas),
@@ -186,13 +189,23 @@ namespace WpfApp1
                         };
                         Canvas.Children.Add(_currentFigure);
                         break;
-                }
+                    case 5:
+                        FrameworkElement selectedItem = null;
+                        selectedItem = (FrameworkElement)GetCanvasHoveredElement();
+                        Canvas.Children.Remove(selectedItem);
+                        break;
+                }2
             }
+        }
+
+        private UIElement GetCanvasHoveredElement()
+        {
+            var elems = Canvas.Children.OfType<UIElement>().Where(e => e.Visibility == Visibility.Visible && e.IsMouseOver);
+            return elems.DefaultIfEmpty(null).First();
         }
 
         private void ColorPicker_OnSelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
-
             _currentLineColor = new SolidColorBrush(e.NewValue ?? Colors.Black) ;
         }
 

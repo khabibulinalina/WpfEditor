@@ -26,9 +26,10 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" VerticalAlignment="Top"> Выберите тип фигуры</TextBlock>
-            <ComboBox Grid.Row="1" Name="FiguresComboBox" ItemsSource="{Binding Figures}" SelectedIndex="0" VerticalAlignment="Top" />
+            <ComboBox Grid.Row="1" Name="FiguresComboBox" ItemsSource="{Binding Figures}" SelectedIndex="0" VerticalAlignment="Top" Margin="2,0.2,-2.4,0" />
             <TextBlock Grid.Row="2" VerticalAlignment="Top"> Выберите цвет линии</TextBlock>
             <xctk:ColorPicker Grid.Row="3" Name="LineColorPicker" SelectedColorChanged="ColorPicker_OnSelectedColorChanged"></xctk:ColorPicker>
             <TextBlock Grid.Row="4" VerticalAlignment="Top"> Выберите заливку</TextBlock>
@@ -38,6 +39,7 @@
             <TextBlock Grid.Row="8" VerticalAlignment="Top"> Выберите тип линии</TextBlock>
             <ComboBox  Grid.Row="9" Name="LineTypesComboBox" SelectionChanged="LineTypesComboBox_OnSelectionChanged" ItemsSource="{Binding LineTypes}" SelectedIndex="0" VerticalAlignment="Top" />
             <Button Grid.Row="10" Click="ClearClicked" Margin="0,95.8,-0.4,-95.8" >Очистить</Button>
+            <Button Grid.Row="11" Margin="3,10.2,-3.4,0.2" >Редактировать</Button>
         </Grid>
 
         <Canvas Name="Canvas" Background="BlanchedAlmond" Margin="0.4,0,-7.6,-0.2" Grid.Column="1"/>
