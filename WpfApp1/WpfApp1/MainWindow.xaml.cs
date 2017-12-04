@@ -20,12 +20,13 @@ namespace WpfApp1
         private Shape _currentFigure;
         private Point _polygoneStartPoint;
         private List<Point> _polygonPoints = new List<Point>();
+        private List<Point> _polylinePoints = new List<Point>();
 
         private Brush _currentLineColor;
         private Brush _currentBackColor;
         private double _currentThickness;
         private LineType _currentLineType;
-        //private List<Shape> _tempShapes = new List<Shape>();
+        private List<Shape> _tempShapes = new List<Shape>();
 
         public MainWindow()
         {
@@ -51,6 +52,9 @@ namespace WpfApp1
             BackColorPicker.SelectedColor = Color.FromRgb(255, 255, 0);
             Canvas.MouseDown += CanvasOnMouseDown; //подписка на события нажатия и перемещения мыши
             Canvas.MouseMove += CanvasOnMouseMove;
+
+            Canvas.EditingMode = InkCanvasEditingMode.None;
+
         }
 
         private void CanvasOnMouseMove(object sender, MouseEventArgs args)
@@ -103,17 +107,41 @@ namespace WpfApp1
                     polygone.InvalidateVisual();
                     var p = new Polygon
                     {
-                        Points = new PointCollection(_polygonPoints)
+                        Points = new PointCollection(_polygonPoints),
+                        StrokeDashArray = _currentFigure?.StrokeDashArray
                     };
                     p.Fill = _currentBackColor;
+                    p.Stroke = _currentLineColor;
+                    p.StrokeThickness = _currentThickness;
+                    
+
+                    foreach (var item in _polygonPoints)
+                    {
+                        Canvas.Children.RemoveAt(Canvas.Children.Count - _polygonPoints.Count + _polygonPoints.IndexOf(item));
+                    }
                     Canvas.Children.Add(p);
-                    Canvas.InvalidateVisual();
                     _polygonPoints.Clear();
                     _currentFigure = null;
+                    Canvas.InvalidateVisual();
                 }
                 if (_currentFigure is Polyline)// если текущая фигура - полилиния, то завершить ее рисовать(обнулить текущую фигуру)
                 {
+                    var polyline = new System.Windows.Shapes.Polyline
+                    {
+                        Points = new PointCollection(_polylinePoints),
+                        StrokeThickness = _currentThickness,
+                        Stroke = _currentLineColor,
+                        StrokeDashArray = _currentFigure?.StrokeDashArray
+                    };
+                    foreach (var item in _polylinePoints)
+                    {
+                        Canvas.Children.RemoveAt(Canvas.Children.Count - _polylinePoints.Count + _polylinePoints.IndexOf(item));
+                    }
+                    Canvas.Children.Add(polyline);
+                    _polylinePoints.Clear();
+
                     _currentFigure = null;
+                    Canvas.InvalidateVisual();
                 }
                 return;
             }
@@ -129,18 +157,20 @@ namespace WpfApp1
                     };
                     _polygonPoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
+                    _tempShapes.Add(_currentFigure);
                     return;
                 }
 
                 if (_currentFigure is Polyline)//если текущая фигура - полилиния, то закончить ее рисовать и начать рисовать новую 
                 {
-                    //_tempShapes.Add(_currentFigure);
                     _currentFigure = new Polyline(_currentThickness, _currentLineColor, _currentBackColor, _currentLineType)
                     {
                         StartPoint = args.GetPosition(Canvas),
                         EndPoint = args.GetPosition(Canvas),
                     };
+                    _polylinePoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
+                    _tempShapes.Add(_currentFigure);
                     return;
                 }
 
@@ -169,6 +199,7 @@ namespace WpfApp1
                             EndPoint = args.GetPosition(Canvas)
                         };
                         Canvas.Children.Add(_currentFigure);
+                        _polylinePoints.Add(args.GetPosition(Canvas));
                         break;
                     case 3:// если в комбобоксе многоугольник, то рисовать многоугольник
                         _currentFigure = new Polygone(_currentThickness, _currentLineColor, _currentBackColor, _currentLineType)
@@ -190,11 +221,13 @@ namespace WpfApp1
                         Canvas.Children.Add(_currentFigure);
                         break;
                     case 5:
-                        FrameworkElement selectedItem = null;
-                        selectedItem = (FrameworkElement)GetCanvasHoveredElement();
-                        Canvas.Children.Remove(selectedItem);
+                        Canvas.EditingMode = InkCanvasEditingMode.Select;
+                        _currentFigure = null;
+                        //var selectedItem = (FrameworkElement)GetCanvasHoveredElement();
+                        //Canvas.Children.Remove(selectedItem);
                         break;
-                }2
+                }
+                _tempShapes.Add(_currentFigure);
             }
         }
 
@@ -206,17 +239,47 @@ namespace WpfApp1
 
         private void ColorPicker_OnSelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
-            _currentLineColor = new SolidColorBrush(e.NewValue ?? Colors.Black) ;
+            _currentLineColor = new SolidColorBrush(e.NewValue ?? Colors.Black);
+
+            if (Canvas == null) return;
+            var selectedItems = Canvas.GetSelectedElements().ToArray();
+            if (selectedItems.Count() != 0)
+            {
+                foreach (Shape item in selectedItems)
+                {
+                    item.Stroke = _currentLineColor;
+                }
+            }
         }
 
         private void BackColorPicker_OnSelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
         {
             _currentBackColor = new SolidColorBrush(e.NewValue ?? Colors.Black);
+
+            if (Canvas == null) return;
+            var selectedItems = Canvas.GetSelectedElements().ToArray();
+            if (selectedItems.Count() != 0)
+            {
+                foreach (Shape item in selectedItems)
+                {
+                    if (item is Polyline || item is Line) return;
+                    item.Fill = _currentBackColor;
+                }
+            }
         }
 
         private void RangeBase_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             _currentThickness = e.NewValue;
+            if (Canvas == null) return;
+            var selectedItems = Canvas.GetSelectedElements().ToArray();
+            if (selectedItems.Count() != 0)
+            {
+                foreach (Shape item in selectedItems)
+                {
+                    item.StrokeThickness = _currentThickness;
+                }
+            }
         }
 
         private void LineTypesComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -233,11 +296,51 @@ namespace WpfApp1
                     _currentLineType = LineType.Dotted;
                     break;
             }
+            if (Canvas == null) return;
+            var selectedItems = Canvas.GetSelectedElements().ToArray();
+            if (selectedItems.Count() != 0)
+            {
+                foreach (Shape item in selectedItems)
+                {
+                    item.StrokeDashArray = GetDashedArrayByThickness(_currentLineType) ?? GetDashedArrayByThickness(LineType.Solid);
+                }
+            }
+        }
+
+        private DoubleCollection GetDashedArrayByThickness(LineType value)
+        {
+            switch (value)
+            {
+                case LineType.Solid:
+                    return new DoubleCollection { 100000 };
+                case LineType.Dashed:
+                    return new DoubleCollection { 10 };
+                case LineType.Dotted:
+                    return new DoubleCollection { 1 };
+                default:
+                    return null;
+            }
         }
 
         private void ClearClicked(object sender, RoutedEventArgs e)
         {
             Canvas.Children.Clear();
+        }
+
+        private void Remove_Button_Click(object sender, RoutedEventArgs e)
+        {
+            var items = Canvas.GetSelectedElements().ToArray();
+            foreach (var item in items)
+            {
+                Canvas.Children.Remove(item);
+            }
+        }
+
+        private void FiguresComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (Canvas == null) return;
+            if (FiguresComboBox.SelectedIndex == 5) return;
+            Canvas.EditingMode = InkCanvasEditingMode.None;
         }
     }
 }
