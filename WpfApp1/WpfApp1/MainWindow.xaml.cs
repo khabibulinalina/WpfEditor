@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Xceed.Wpf.Toolkit;
@@ -26,7 +28,7 @@ namespace WpfApp1
         private Brush _currentBackColor;
         private double _currentThickness;
         private LineType _currentLineType;
-        private List<Shape> _tempShapes = new List<Shape>();
+        private List<Shape> _clipboard = new List<Shape>();
 
         public MainWindow()
         {
@@ -48,13 +50,46 @@ namespace WpfApp1
             };
 
             InitializeComponent();  //загружает интерфейс
-            LineColorPicker.SelectedColor=Color.FromRgb(255,111,150);
+            LineColorPicker.SelectedColor=Color.FromRgb(255,111,150); 
             BackColorPicker.SelectedColor = Color.FromRgb(255, 255, 0);
             Canvas.MouseDown += CanvasOnMouseDown; //подписка на события нажатия и перемещения мыши
             Canvas.MouseMove += CanvasOnMouseMove;
+            Canvas.PreviewKeyDown += Canvas_PreviewKeyDown; //подписка на нажатие кнопок клавиатуры
+            Canvas.EditingMode = InkCanvasEditingMode.None; 
 
-            Canvas.EditingMode = InkCanvasEditingMode.None;
+        }
 
+        private void Canvas_PreviewKeyDown(object sender, KeyEventArgs e) //функции копирования, вставки и вырезания
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
+                _clipboard.Clear();  //очистить буфер
+                foreach (Shape item in Canvas.GetSelectedElements())
+                {
+                    _clipboard.Add(item);
+                }
+            }
+
+            if (e.Key == Key.V && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (_clipboard == null || _clipboard.Count == 0) return;
+                _clipboard.Select(t => Canvas.Children.Add(t));
+            }
+
+            if (e.Key == Key.X && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
+                _clipboard.Clear();
+                
+                foreach (Shape element in Canvas.GetSelectedElements())
+                {
+                    _clipboard.Add(element);
+                    Canvas.Children.Remove(element);
+                }
+            }
+
+            Canvas.InvalidateVisual(); //перерисовываем канвас
         }
 
         private void CanvasOnMouseMove(object sender, MouseEventArgs args)
@@ -105,7 +140,8 @@ namespace WpfApp1
 
                     polygone.EndPoint = _polygoneStartPoint;
                     polygone.InvalidateVisual();
-                    var p = new Polygon
+
+                    var p = new Polygon 
                     {
                         Points = new PointCollection(_polygonPoints),
                         StrokeDashArray = _currentFigure?.StrokeDashArray
@@ -115,7 +151,7 @@ namespace WpfApp1
                     p.StrokeThickness = _currentThickness;
                     
 
-                    foreach (var item in _polygonPoints)
+                    foreach (var item in _polygonPoints)  //для каждой точки нужно стереть палочки
                     {
                         Canvas.Children.RemoveAt(Canvas.Children.Count - _polygonPoints.Count + _polygonPoints.IndexOf(item));
                     }
@@ -157,7 +193,6 @@ namespace WpfApp1
                     };
                     _polygonPoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
-                    _tempShapes.Add(_currentFigure);
                     return;
                 }
 
@@ -170,7 +205,6 @@ namespace WpfApp1
                     };
                     _polylinePoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
-                    _tempShapes.Add(_currentFigure);
                     return;
                 }
 
@@ -227,7 +261,6 @@ namespace WpfApp1
                         //Canvas.Children.Remove(selectedItem);
                         break;
                 }
-                _tempShapes.Add(_currentFigure);
             }
         }
 
@@ -336,7 +369,7 @@ namespace WpfApp1
             }
         }
 
-        private void FiguresComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FiguresComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) //
         {
             if (Canvas == null) return;
             if (FiguresComboBox.SelectedIndex == 5) return;
