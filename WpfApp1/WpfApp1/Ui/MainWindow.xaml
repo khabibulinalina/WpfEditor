@@ -1,0 +1,70 @@
+﻿<Window x:Class="WpfApp1.Ui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfApp1"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+
+        mc:Ignorable="d"
+        Title="MainWindow" Height="500" Width="525" d:DataContext="{d:DesignData MainViewModel}">
+    <Grid>
+        <Menu>
+            <MenuItem Header="File">
+                <MenuItem Header="New" Click="NewClicked"></MenuItem>
+                <MenuItem Header="Open" Click="OpenClicked"></MenuItem>
+                <MenuItem Header="Save" Click="SaveClicked"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Undo" Click="UndoClicked"></MenuItem>
+                <MenuItem Header="Redo" Click="RedoClicked"></MenuItem>
+                <Separator></Separator>
+                <MenuItem Header="Cut" Click="CutClicked"></MenuItem>
+                <MenuItem Header="Copy" Click="CopyClicked"></MenuItem>
+                <MenuItem Header="Paste" Click="PasteClicked"></MenuItem>
+            </MenuItem>
+        </Menu>
+        
+        <Grid Margin="0 20 0 0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" VerticalAlignment="Top"> Выберите тип фигуры</TextBlock>
+            <ComboBox Grid.Row="1" Name="FiguresComboBox" SelectionChanged="FiguresComboBox_SelectionChanged"
+                      ItemsSource="{Binding Figures}" SelectedIndex="{Binding FiguresComboBoxSelectedIndex}"
+                      VerticalAlignment="Top" Margin="2,0.2,-2.4,0" />
+            <TextBlock Grid.Row="2" VerticalAlignment="Top"> Выберите цвет линии</TextBlock>
+            <xctk:ColorPicker Grid.Row="3" Name="LineColorPicker" SelectedColor="{Binding CurrentLineColor}" />
+            <TextBlock Grid.Row="4" VerticalAlignment="Top"> Выберите заливку</TextBlock>
+            <xctk:ColorPicker Grid.Row="5" Name="BackColorPicker" SelectedColor="{Binding CurrentBackColor}" />
+            <TextBlock Grid.Row="6" VerticalAlignment="Top"> Выберите ширину линии</TextBlock>
+            <Slider Grid.Row="7" Name="WidthLine" Minimum="1" Value="{Binding CurrentThickness}" />
+            <TextBlock Grid.Row="8" VerticalAlignment="Top"> Выберите тип линии</TextBlock>
+            <ComboBox Grid.Row="9" Name="LineTypesComboBox" SelectionChanged="LineTypesComboBox_OnSelectionChanged"
+                      ItemsSource="{Binding LineTypes}" SelectedIndex="0" VerticalAlignment="Top" />
+            <Button Grid.Row="10" Click="ClearClicked" Margin="0,95.8,-0.4,-95.8">Очистить</Button>
+            <Button Grid.Row="11" Click="Remove_Button_Click">Удалить фигуру</Button>
+        </Grid>
+
+        <InkCanvas Name="Canvas" Background="BlanchedAlmond" Margin="0.4,0,-7.6,-0.2" Grid.Column="1" />
+    </Grid>
+        
+    </Grid>
+</Window>

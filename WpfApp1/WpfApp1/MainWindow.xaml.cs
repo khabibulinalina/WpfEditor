@@ -29,6 +29,8 @@ namespace WpfApp1
         private double _currentThickness;
         private LineType _currentLineType;
         private List<Shape> _clipboard = new List<Shape>();
+        private List<List<UIElement>> _history = new List<List<UIElement>>();
+        private int _currentHistoryPosition;
 
         public MainWindow()
         {
@@ -55,38 +57,53 @@ namespace WpfApp1
             Canvas.MouseDown += CanvasOnMouseDown; //подписка на события нажатия и перемещения мыши
             Canvas.MouseMove += CanvasOnMouseMove;
             Canvas.PreviewKeyDown += Canvas_PreviewKeyDown; //подписка на нажатие кнопок клавиатуры
-            Canvas.EditingMode = InkCanvasEditingMode.None; 
+            Canvas.EditingMode = InkCanvasEditingMode.None;
+            Canvas.MoveEnabled = true;
+            Canvas.ResizeEnabled = true;
 
         }
 
         private void Canvas_PreviewKeyDown(object sender, KeyEventArgs e) //функции копирования, вставки и вырезания
         {
+            if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                GoBack();
+            }
+
+            if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control && Keyboard.Modifiers == ModifierKeys.Shift)
+            {
+
+            }
+
             if (e.Key == Key.C && Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
-                _clipboard.Clear();  //очистить буфер
-                foreach (Shape item in Canvas.GetSelectedElements())
-                {
-                    _clipboard.Add(item);
-                }
+                Canvas.CopySelection();
+                //if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
+                //_clipboard.Clear();  //очистить буфер
+                //foreach (Shape item in Canvas.GetSelectedElements())
+                //{
+                //    _clipboard.Add(item);
+                //}
             }
 
             if (e.Key == Key.V && Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (_clipboard == null || _clipboard.Count == 0) return;
-                _clipboard.Select(t => Canvas.Children.Add(t));
+                Canvas.Paste(new Point(Canvas.ActualWidth/2, Canvas.ActualHeight/2));
+                //if (_clipboard == null || _clipboard.Count == 0) return;
+                //_clipboard.Select(t => Canvas.Children.Add(t));
             }
 
             if (e.Key == Key.X && Keyboard.Modifiers == ModifierKeys.Control)
             {
-                if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
-                _clipboard.Clear();
+                Canvas.CutSelection();
+                //if (Canvas.GetSelectedElements() == null || Canvas.GetSelectedElements().Count == 0) return;
+                //_clipboard.Clear();
                 
-                foreach (Shape element in Canvas.GetSelectedElements())
-                {
-                    _clipboard.Add(element);
-                    Canvas.Children.Remove(element);
-                }
+                //foreach (Shape element in Canvas.GetSelectedElements())
+                //{
+                //    _clipboard.Add(element);
+                //    Canvas.Children.Remove(element);
+                //}
             }
 
             Canvas.InvalidateVisual(); //перерисовываем канвас
@@ -153,7 +170,7 @@ namespace WpfApp1
 
                     foreach (var item in _polygonPoints)  //для каждой точки нужно стереть палочки
                     {
-                        Canvas.Children.RemoveAt(Canvas.Children.Count - _polygonPoints.Count + _polygonPoints.IndexOf(item));
+                        Canvas.Children.RemoveAt(Canvas.Children.Count - (_polygonPoints.Count ) + _polygonPoints.IndexOf(item));
                     }
                     Canvas.Children.Add(p);
                     _polygonPoints.Clear();
@@ -179,6 +196,7 @@ namespace WpfApp1
                     _currentFigure = null;
                     Canvas.InvalidateVisual();
                 }
+                SaveCanvasState();
                 return;
             }
 
@@ -193,6 +211,7 @@ namespace WpfApp1
                     };
                     _polygonPoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
+                    SaveCanvasState();
                     return;
                 }
 
@@ -205,6 +224,7 @@ namespace WpfApp1
                     };
                     _polylinePoints.Add(args.GetPosition(Canvas));
                     Canvas.Children.Add(_currentFigure);
+                    SaveCanvasState();
                     return;
                 }
 
@@ -253,6 +273,7 @@ namespace WpfApp1
                             RadiusY = 0
                         };
                         Canvas.Children.Add(_currentFigure);
+                        
                         break;
                     case 5:
                         Canvas.EditingMode = InkCanvasEditingMode.Select;
@@ -261,7 +282,29 @@ namespace WpfApp1
                         //Canvas.Children.Remove(selectedItem);
                         break;
                 }
+                SaveCanvasState();
             }
+        }
+
+        private void GoBack()
+        {
+            Canvas.Children.Clear();
+            foreach(Shape item in _history[_currentHistoryPosition - 1])
+            {
+                Canvas.Children.Add(item);
+            }
+
+            _currentHistoryPosition--;
+            
+        }
+
+        private void SaveCanvasState()
+        {
+            //Canvas.Children
+            _history.Add(Canvas.Children.Cast<UIElement>().ToList());
+            _currentHistoryPosition = _history.Count;
+            
+            //_history.Add(shape);
         }
 
         private UIElement GetCanvasHoveredElement()

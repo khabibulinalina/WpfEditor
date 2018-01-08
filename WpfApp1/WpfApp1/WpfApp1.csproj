@@ -34,6 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MonitoredUndo, Version=1.2.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MUF.1.2.1\lib\net40\MonitoredUndo.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -72,7 +75,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Ui\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -80,19 +83,34 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Circle.cs" />
-    <Compile Include="Ellipse.cs" />
-    <Compile Include="Figure.cs" />
-    <Compile Include="Line.cs" />
-    <Compile Include="LineType.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Figures\Circle.cs" />
+    <Compile Include="Figures\Ellipse.cs" />
+    <Compile Include="Figures\Figure.cs" />
+    <Compile Include="Helpers\CanvasOnMouseDownEventArgs.cs" />
+    <Compile Include="Helpers\CanvasOnMouseUpEventArgs.cs" />
+    <Compile Include="Figures\Line.cs" />
+    <Compile Include="Figures\LineType.cs" />
+    <Compile Include="Helpers\MoveFigureByTwoPointsEventArgs.cs" />
+    <Compile Include="Helpers\MoveFigureEventArgs.cs" />
+    <Compile Include="Helpers\ShapesExtensions.cs" />
+    <Compile Include="Helpers\UndoRedoManager.cs" />
+    <Compile Include="Mvvm\BaseVIewModel.cs" />
+    <Compile Include="Mvvm\ChangeFillColorCommand.cs" />
+    <Compile Include="Mvvm\ChangeLineTypesCommand.cs" />
+    <Compile Include="Mvvm\ChangeStrokeColorCommand.cs" />
+    <Compile Include="Mvvm\ChangeThicknessCommand.cs" />
+    <Compile Include="Mvvm\ICommand.cs" />
+    <Compile Include="Mvvm\RelayCommand.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Ui\MainViewModel.cs" />
+    <Compile Include="Ui\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Polygone.cs" />
-    <Compile Include="Polyline.cs" />
+    <Compile Include="Figures\Polygone.cs" />
+    <Compile Include="Figures\Polyline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -110,6 +128,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Monitored Undo Documentation.docx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
